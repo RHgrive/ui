@@ -55,7 +55,7 @@ jobs:
             SilentPwn/Source/UI/Icons.mm \
             SilentPwn/Source/Memory/Thread/Thread.mm \
             SilentPwn/Source/FrameWork/Framework.mm \
-            src/test.m \
+            src/test.mm \
             -o build/test.dylib
 
       - name: Upload dylib
