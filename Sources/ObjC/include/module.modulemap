@@ -1,0 +1,4 @@
+module ObjCModule {
+    header "../test.h"
+    export *
+}
