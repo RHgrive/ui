@@ -1,4 +1,4 @@
-// swift-tools-version: 5.10
+// swift-tools-version:5.10
 import PackageDescription
 
 let package = Package(
@@ -12,14 +12,21 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "ui",
-            path: "Sources",
-            sources: ["Swift/test.swift", "ObjC/test.m"],  // 明示的にファイル指定
-            publicHeadersPath: "ObjC",  // ヘッダーファイルの場所
+            name: "ObjCModule",
+            path: "Sources/ObjC",
+            publicHeadersPath: ".",
             cSettings: [
-                .headerSearchPath("ObjC"),  // ヘッダー検索パス
-                .unsafeFlags(["-fmodules"])  // モジュールサポートを有効化（CIで必要になる場合あり）
+                .headerSearchPath(".")
             ]
+        ),
+        .target(
+            name: "SwiftModule",
+            dependencies: ["ObjCModule"],
+            path: "Sources/Swift"
+        ),
+        .target(
+            name: "ui",
+            dependencies: ["ObjCModule", "SwiftModule"]
         )
     ]
 )
