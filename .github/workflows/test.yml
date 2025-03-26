@@ -1,4 +1,4 @@
-name: Build Objective-C dylib with Icon
+name: Build and Upload dylib (Swift-ObjC Integration)
 
 on:
   push:
@@ -8,58 +8,23 @@ on:
 jobs:
   build:
     runs-on: macos-latest
+
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v2
 
-      - name: Download KIF
-        run: |
-          git clone https://github.com/zjjno/PTFakeTouchDemo.git
-          git clone https://github.com/tuxi/PTFakeTouch.git
-          git clone https://github.com/Batchhh/SilentPwn.git
+    - name: Set up Xcode
+      uses: apple-actions/setup-xcode@v2
+      with:
+        xcode-version: '13.0'
 
-      - name: Set up Xcode
-        run: sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
+    - name: Build dylib
+      run: |
+        swift build -c release
+        cp ./.build/release/libSwiftObjcIntegration.dylib build/test.dylib
 
-      - name: Build dylib for arm64
-        run: |
-          mkdir -p build
-          clang -isysroot /Applications/Xcode_15.4.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS17.5.sdk \
-            -target arm64-apple-ios17.5 \
-            -I src \
-            -I PTFakeTouch/PTFakeTouch/addition \
-            -I PTFakeTouch/PTFakeTouch \
-            -I SilentPwn/Source \
-            -I SilentPwn/Lib/Keystone/includes \
-            -I SilentPwn/Lib/Obfuscation \
-            -I SilentPwn/Source/UI \
-            -I SilentPwn/Source/Memory/Patch \
-            -I SilentPwn/Source/Memory \
-            -I SilentPwn/Source/Memory/Hook \
-            -I SilentPwn/Source/Memory/Kitty \
-            -I SilentPwn/Source/Memory/Thread \
-            -I SilentPwn/Source/Framework \
-            -fobjc-arc \
-            -FPTFakeTouch/Libs \
-            -framework Foundation \
-            -framework UIKit \
-            -framework CoreGraphics \
-            -framework QuartzCore \
-            -framework IOKit \
-            -w \
-            -shared \
-            PTFakeTouch/PTFakeTouch/addition/UITouch-KIFAdditions.m \
-            PTFakeTouch/PTFakeTouch/addition/UIEvent+KIFAdditions.m \
-            PTFakeTouch/PTFakeTouch/addition/IOHIDEvent+KIF.m \
-            SilentPwn/Source/UI/Menu.mm \
-            SilentPwn/Source/UI/Icons.mm \
-            SilentPwn/Source/Memory/Thread/Thread.mm \
-            SilentPwn/Source/FrameWork/Framework.mm \
-            src/test.mm \
-            -o build/test.dylib
-
-      - name: Upload dylib
-        uses: actions/upload-artifact@v4
-        with:
-          name: test.dylib
-          path: build/test.dylib
+    - name: Upload dylib
+      uses: actions/upload-artifact@v4
+      with:
+        name: test.dylib
+        path: build/test.dylib
