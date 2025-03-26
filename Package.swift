@@ -1,4 +1,4 @@
-// swift-tools-version: 5.10
+// swift-tools-version:5.10
 import PackageDescription
 
 let package = Package(
@@ -7,23 +7,34 @@ let package = Package(
     products: [
         .library(
             name: "ui",
-            type: .dynamic,  // 明示的に dynamic library を指定
+            type: .dynamic,
             targets: ["ui"]
         ),
     ],
     targets: [
+        // Objective-Cターゲット
+        .target(
+            name: "ObjCModule",
+            path: "Sources/ObjC",
+            publicHeadersPath: ".",
+            cSettings: [
+                .headerSearchPath(".")
+            ]
+        ),
+        
+        // Swiftターゲット
+        .target(
+            name: "SwiftModule",
+            dependencies: ["ObjCModule"],
+            path: "Sources/Swift"
+        ),
+        
+        // 統合ターゲット
         .target(
             name: "ui",
-            path: "Sources",
-            sources: ["Swift/test.swift", "ObjC/test.m"],
-            publicHeadersPath: "ObjC",
-            cSettings: [
-                .headerSearchPath("ObjC"),
-                .unsafeFlags(["-fmodules"])
-            ],
-            linkerSettings: [
-                .unsafeFlags(["-Xlinker", "-objc"])
-            ]
+            dependencies: ["ObjCModule", "SwiftModule"],
+            path: "Sources/Integration",
+            sources: []
         )
     ]
 )
