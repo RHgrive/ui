@@ -2,21 +2,23 @@
 import PackageDescription
 
 let package = Package(
-    name: "SwiftObjcIntegration",
+    name: "MixedLanguagePackage",
     platforms: [.iOS(.v13)],
     products: [
-        .library(name: "SwiftObjcIntegration", type: .dynamic, targets: ["SwiftObjcIntegration"]),
+        .library(
+            name: "MixedLanguagePackage",
+            targets: ["MixedLanguagePackage"]
+        ),
     ],
     targets: [
         .target(
-            name: "SwiftObjcIntegration", // 全体のターゲット名
-            dependencies: [],
+            name: "MixedLanguagePackage",
             path: "Sources",
-            sources: ["Swift/test.swift", "ObjC/test.m"], // Swift と ObjC のファイルを指定
+            exclude: ["ObjC/test.h"], // 公開しないヘッダーは除外
+            publicHeadersPath: "ObjC", // 公開ヘッダーのディレクトリ
             cSettings: [
-                .headerSearchPath("Sources/ObjC")
+                .headerSearchPath("ObjC"), // ヘッダー検索パス
             ]
-        ),
+        )
     ]
 )
-
