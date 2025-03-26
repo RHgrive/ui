@@ -8,23 +8,29 @@ let package = Package(
         .library(
             name: "ui",
             type: .dynamic,
-            targets: ["SwiftModule"]  // メインターゲットをSwiftに
+            targets: ["ui"]
         ),
     ],
     targets: [
-        // Objective-Cターゲット
         .target(
             name: "ObjCModule",
             path: "Sources/ObjC",
-            publicHeadersPath: ".",
-            cSettings: [.headerSearchPath(".")]
+            exclude: ["include/module.modulemap"],
+            publicHeadersPath: "include",  // モジュールマップ配置先
+            cSettings: [
+                .headerSearchPath("."),
+                .headerSearchPath("include"),
+                .unsafeFlags(["-fmodules"])
+            ]
         ),
-        
-        // Swiftターゲット（ObjCに依存）
         .target(
-            name: "SwiftModule",
+            name: "ui",
             dependencies: ["ObjCModule"],
-            path: "Sources/Swift"
+            path: "Sources/Swift",
+            linkerSettings: [
+                .linkedLibrary("objc"),
+                .unsafeFlags(["-Xlinker", "-rpath", "-Xlinker", "@executable_path/Frameworks"])
+            ]
         )
     ]
 )
