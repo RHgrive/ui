@@ -3,7 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "ui",
-    platforms: [.iOS(.v13)],
+    platforms: [.iOS(.v17)],  // iOS 17 に明示的に合わせる
     products: [
         .library(
             name: "ui",
@@ -32,8 +32,7 @@ let package = Package(
             swiftSettings: [
                 .unsafeFlags([
                     "-target", "arm64-apple-ios17.5",
-                    "-sdk", "/Applications/Xcode_15.4.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS17.5.sdk",
-                    "-import-objc-header", "Sources/ObjC/include/module.modulemap"
+                    "-sdk", "/Applications/Xcode_15.4.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS17.5.sdk"
                 ])
             ],
             linkerSettings: [
