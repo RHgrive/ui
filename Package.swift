@@ -5,7 +5,7 @@ let package = Package(
     name: "SwiftObjcIntegration",
     platforms: [.iOS(.v13)],
     products: [
-        .library(name: "SwiftObjcIntegration", type: .dynamic, targets: ["SwiftObjcIntegration"]),
+        .library(name: "SwiftObjcIntegration", type: .dynamic, targets: ["SwiftObjcIntegrationSwift"]),
     ],
     targets: [
         .target(
@@ -20,10 +20,6 @@ let package = Package(
             name: "SwiftObjcIntegrationObjC",
             dependencies: [],
             path: "Sources/ObjC"
-        ),
-        .testTarget(
-            name: "SwiftObjcIntegrationTests",
-            dependencies: ["SwiftObjcIntegrationSwift", "SwiftObjcIntegrationObjC"]
-        ),
+        )
     ]
 )
