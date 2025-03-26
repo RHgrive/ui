@@ -1,4 +1,4 @@
-#import "ObjcClass.h"
+#import "test.h"
 
 @implementation ObjcClass
 - (void)objcMethod {
