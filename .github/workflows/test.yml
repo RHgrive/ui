@@ -10,21 +10,25 @@ jobs:
     runs-on: macos-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Set up Xcode
-      run: sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
+      - name: Set up Xcode
+        run: sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
 
-    - name: Build dylib (Swift + Objective-C)
-      run: |
-        # SwiftPM を使ってビルド
-        swift build -c release
-        # ビルドした dylib を指定の場所にコピー
-        cp ./.build/release/libSwiftObjcIntegration.dylib build/test.dylib
+      - name: Build dylib (Swift + Objective-C)
+        run: |
+          # クリーンビルド
+          swift package clean
+          # リリースビルド
+          swift build -c release --product ui
+          # 出力ディレクトリ作成
+          mkdir -p build
+          # dylib コピー (ターゲット名を ui に合わせる)
+          cp .build/release/libui.dylib build/test.dylib
 
-    - name: Upload dylib
-      uses: actions/upload-artifact@v4
-      with:
-        name: test.dylib
-        path: build/test.dylib
+      - name: Upload dylib
+        uses: actions/upload-artifact@v4
+        with:
+          name: test.dylib
+          path: build/test.dylib
