@@ -9,15 +9,21 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "SwiftObjcIntegration",
+            name: "SwiftObjcIntegrationSwift",
             dependencies: [],
+            path: "Sources/Swift",
             cSettings: [
                 .headerSearchPath("Sources/ObjC")
             ]
         ),
+        .target(
+            name: "SwiftObjcIntegrationObjC",
+            dependencies: [],
+            path: "Sources/ObjC"
+        ),
         .testTarget(
             name: "SwiftObjcIntegrationTests",
-            dependencies: ["SwiftObjcIntegration"]
+            dependencies: ["SwiftObjcIntegrationSwift", "SwiftObjcIntegrationObjC"]
         ),
     ]
 )
