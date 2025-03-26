@@ -2,24 +2,46 @@ name: Build Swift and Objective-C dylib
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
   build:
     runs-on: macos-latest
 
     steps:
-     - uses: actions/checkout@v4
-     - run: sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
-     - run: |
-         swift package clean
-         swift build -c release --product ui
-         mkdir -p build
-         cp .build/release/libui.dylib build/test.dylib
+      - uses: actions/checkout@v4
 
-     - name: Upload dylib
-       uses: actions/upload-artifact@v4
-       with:
-         name: test.dylib
-         path: build/test.dylib
+      # 1. Xcode 15.4 を明示的に指定
+      - name: Set up Xcode
+        run: |
+          sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
+          xcodebuild -version
+
+      # 2. モジュールマップとヘッダーの準備
+      - name: Prepare Objective-C Module
+        run: |
+          mkdir -p Sources/ObjC/include
+          echo 'module ObjCModule { header "../test.h"; export *; }' > Sources/ObjC/include/module.modulemap
+          cat Sources/ObjC/include/module.modulemap  # 確認用
+
+      # 3. 絶対パスを設定してビルド
+      - name: Build dylib
+        run: |
+          swift package clean
+          SRCROOT=$(pwd)
+          swift build \
+            -c release \
+            -Xcc -I$SRCROOT/Sources/ObjC \
+            -Xcc -I$SRCROOT/Sources/ObjC/include \
+            -v  # 詳細ログを有効化
+
+          # 4. 成果物をコピー
+          mkdir -p build
+          cp .build/release/libui.dylib build/test.dylib
+          file build/test.dylib  # ファイルタイプを確認
+
+      - name: Upload dylib
+        uses: actions/upload-artifact@v4
+        with:
+          name: test.dylib
+          path: build/test.dylib
