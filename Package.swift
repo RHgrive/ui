@@ -8,7 +8,7 @@ let package = Package(
         .library(
             name: "ui",
             type: .dynamic,
-            targets: ["ui"]
+            targets: ["SwiftModule"]  // メインターゲットをSwiftに
         ),
     ],
     targets: [
@@ -17,24 +17,14 @@ let package = Package(
             name: "ObjCModule",
             path: "Sources/ObjC",
             publicHeadersPath: ".",
-            cSettings: [
-                .headerSearchPath(".")
-            ]
+            cSettings: [.headerSearchPath(".")]
         ),
         
-        // Swiftターゲット
+        // Swiftターゲット（ObjCに依存）
         .target(
             name: "SwiftModule",
             dependencies: ["ObjCModule"],
             path: "Sources/Swift"
-        ),
-        
-        // 統合ターゲット
-        .target(
-            name: "ui",
-            dependencies: ["ObjCModule", "SwiftModule"],
-            path: "Sources/Integration",
-            sources: []
         )
     ]
 )
