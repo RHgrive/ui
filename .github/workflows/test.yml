@@ -1,4 +1,4 @@
-name: Build Swift and Objective-C dylib
+name: Build for iOS 17.5
 
 on:
   push:
@@ -7,40 +7,45 @@ on:
 jobs:
   build:
     runs-on: macos-latest
-
     steps:
       - uses: actions/checkout@v4
 
-      # 1. Xcode 15.4 を明示的に指定
+      # 1. Xcode 15.4 設定
       - name: Set up Xcode
         run: |
           sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
           xcodebuild -version
 
-      # 2. モジュールマップとヘッダーの準備
-      - name: Prepare Objective-C Module
+      # 2. モジュールマップ準備（絶対パス対応）
+      - name: Prepare Modulemap
         run: |
           mkdir -p Sources/ObjC/include
-          echo 'module ObjCModule { header "../test.h"; export *; }' > Sources/ObjC/include/module.modulemap
-          cat Sources/ObjC/include/module.modulemap  # 確認用
+          echo 'module ObjCModule { header "test.h"; export *; }' > Sources/ObjC/include/module.modulemap
+          ln -sf ../test.h Sources/ObjC/include/test.h
+          
+          # 絶対パス確認（あなたの指定パス）
+          export SDK_PATH="/Applications/Xcode_15.4.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS17.5.sdk"
+          echo "SDK_PATH: $SDK_PATH"
+          ls -la $SDK_PATH
 
-      # 3. 絶対パスを設定してビルド
-      - name: Build dylib
+      # 3. ビルド実行（明示的パス使用）
+      - name: Build with iOS 17.5 SDK
         run: |
           swift package clean
-          SRCROOT=$(pwd)
+          
           swift build \
             -c release \
-            -Xcc -I$SRCROOT/Sources/ObjC \
-            -Xcc -I$SRCROOT/Sources/ObjC/include \
-            -v  # 詳細ログを有効化
+            -Xswiftc "-sdk" -Xswiftc "$SDK_PATH" \
+            -Xswiftc "-target" -Xswiftc "arm64-apple-ios17.5" \
+            -Xcc "-isysroot" -Xcc "$SDK_PATH" \
+            -Xcc "-target" -Xcc "arm64-apple-ios17.5" \
+            -v
 
-          # 4. 成果物をコピー
           mkdir -p build
           cp .build/release/libui.dylib build/test.dylib
-          file build/test.dylib  # ファイルタイプを確認
+          file build/test.dylib
 
-      - name: Upload dylib
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: test.dylib
