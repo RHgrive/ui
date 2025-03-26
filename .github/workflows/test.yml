@@ -10,40 +10,58 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # 1. Xcode 15.4 設定
+      # 1. Xcode 15.4 設定（完全クリーン）
       - name: Set up Xcode
         run: |
           sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
+          sudo xcodebuild -resetSettings
           xcodebuild -version
 
-      # 2. モジュールマップ準備（絶対パス対応）
+      # 2. 環境変数設定（絶対パス固定）
+      - name: Set iOS SDK Path
+        run: |
+          export SDKROOT=/Applications/Xcode_15.4.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS17.5.sdk
+          echo "SDKROOT=$SDKROOT" >> $GITHUB_ENV
+          echo "TARGET=arm64-apple-ios17.5" >> $GITHUB_ENV
+
+          # SDK存在確認
+          if [ ! -d "$SDKROOT" ]; then
+            echo "::error::❌ iPhoneOS17.5.sdk not found at: $SDKROOT"
+            ls -la /Applications/Xcode_15.4.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/
+            exit 1
+          fi
+
+      # 3. モジュールマップ生成（改行コード対策）
       - name: Prepare Modulemap
         run: |
           mkdir -p Sources/ObjC/include
-          echo 'module ObjCModule { header "test.h"; export *; }' > Sources/ObjC/include/module.modulemap
+          printf 'module ObjCModule {\n  header "test.h";\n  export *;\n}' > Sources/ObjC/include/module.modulemap
           ln -sf ../test.h Sources/ObjC/include/test.h
-          
-          # 絶対パス確認（あなたの指定パス）
-          export SDK_PATH="/Applications/Xcode_15.4.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS17.5.sdk"
-          echo "SDK_PATH: $SDK_PATH"
-          ls -la $SDK_PATH
 
-      # 3. ビルド実行（明示的パス使用）
-      - name: Build with iOS 17.5 SDK
+          # 改行コード確認
+          file Sources/ObjC/include/module.modulemap
+          hexdump -C Sources/ObjC/include/module.modulemap | head -5
+
+      # 4. ビルド実行（完全隔離）
+      - name: Build with iOS SDK
         run: |
           swift package clean
           
+          # 環境変数を使用して完全隔離
           swift build \
             -c release \
-            -Xswiftc "-sdk" -Xswiftc "$SDK_PATH" \
-            -Xswiftc "-target" -Xswiftc "arm64-apple-ios17.5" \
-            -Xcc "-isysroot" -Xcc "$SDK_PATH" \
-            -Xcc "-target" -Xcc "arm64-apple-ios17.5" \
+            -Xswiftc "-sdk" -Xswiftc "$SDKROOT" \
+            -Xswiftc "-target" -Xswiftc "$TARGET" \
+            -Xcc "-isysroot" -Xcc "$SDKROOT" \
+            -Xcc "-target" -Xcc "$TARGET" \
+            -Xcc "-I$(pwd)/Sources/ObjC/include" \
             -v
 
+          # 成果物チェック
           mkdir -p build
           cp .build/release/libui.dylib build/test.dylib
           file build/test.dylib
+          otool -l build/test.dylib | grep LC_VERSION -A 3
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
