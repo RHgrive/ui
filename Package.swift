@@ -15,18 +15,27 @@ let package = Package(
         .target(
             name: "ObjCModule",
             path: "Sources/ObjC",
-            exclude: ["include/module.modulemap"],
-            publicHeadersPath: "include",  // モジュールマップ配置先
+            publicHeadersPath: "include",
             cSettings: [
                 .headerSearchPath("."),
-                .headerSearchPath("include"),
-                .unsafeFlags(["-fmodules"])
+                .unsafeFlags([
+                    "-fmodules",
+                    "-target", "arm64-apple-ios17.5",
+                    "-isysroot", "/Applications/Xcode_15.4.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS17.5.sdk"
+                ])
             ]
         ),
         .target(
             name: "ui",
             dependencies: ["ObjCModule"],
             path: "Sources/Swift",
+            swiftSettings: [
+                .unsafeFlags([
+                    "-target", "arm64-apple-ios17.5",
+                    "-sdk", "/Applications/Xcode_15.4.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS17.5.sdk",
+                    "-import-objc-header", "Sources/ObjC/include/module.modulemap"
+                ])
+            ],
             linkerSettings: [
                 .linkedLibrary("objc"),
                 .unsafeFlags(["-Xlinker", "-rpath", "-Xlinker", "@executable_path/Frameworks"])
